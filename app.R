@@ -3,6 +3,7 @@ library(ggplot2)
 library(patchwork)
 library(stringr)
 library(tidyr)
+library(corrplot)
 
 # Define the list of models
 model_list <- c(
@@ -161,6 +162,9 @@ ui <- fluidPage(
                 )
             )
         ),
+        tabPanel("Correlation Plot",
+                 plotOutput("correlation_plot", height = "600px")
+        ),
         tabPanel(
             "About",
             fluidRow(
@@ -269,23 +273,75 @@ server <- function(input, output, session) {
             plot_layout(ncol = 2, widths = c(9, 1))
     }
     
+    # Function to generate correlation plot
+    generate_correlation_plot <- reactive({
+      req(input$selected_models)
+      
+      # Select the columns for the selected models
+      selected_columns <- paste0("ntile_", input$selected_models)
+      
+      # Calculate correlations
+      cor_matrix <- df_ntile_norm %>%
+        select(all_of(selected_columns)) %>%
+        cor()
+      
+      # Create correlation plot
+      corrplot(cor_matrix, 
+               method = "color", 
+               type = "full", 
+               order = "hclust", 
+               tl.col = "black", 
+               tl.srt = 45, 
+               addCoef.col = "black", 
+               number.cex = 0.7,
+               title = "Pairwise Correlations of PRS Percentile Estimates",
+               mar = c(0,0,1,0))
+    })
+    
+    # Render correlation plot
+    output$correlation_plot <- renderPlot({
+      generate_correlation_plot()
+    })
+    
+    # Observe the plot button click (update to include correlation plot)
+    observeEvent(input$plot_button, {
+      output$score_plot <- renderPlot({
+        generate_plot()
+      })
+      output$correlation_plot <- renderPlot({
+        generate_correlation_plot()
+      })
+    })
+    
+    # Automatically generate plots on app startup
+    observe({
+      req(initial_load())
+      output$score_plot <- renderPlot({
+        generate_plot()
+      })
+      output$correlation_plot <- renderPlot({
+        generate_correlation_plot()
+      })
+    })
+    
+    
     # Reactive value to trigger initial plot
     initial_load <- reactiveVal(FALSE)
     
-    # Observe the plot button click
-    observeEvent(input$plot_button, {
-        output$score_plot <- renderPlot({
-            generate_plot()
-        })
-    })
-    
-    # Automatically generate plot on app startup
-    observe({
-        req(initial_load())
-        output$score_plot <- renderPlot({
-            generate_plot()
-        })
-    })
+    # # Observe the plot button click
+    # observeEvent(input$plot_button, {
+    #     output$score_plot <- renderPlot({
+    #         generate_plot()
+    #     })
+    # })
+    # 
+    # # Automatically generate plot on app startup
+    # observe({
+    #     req(initial_load())
+    #     output$score_plot <- renderPlot({
+    #         generate_plot()
+    #     })
+    # })
     
     # Set initial_load to TRUE after a short delay
     # This ensures all reactive elements are properly initialized
