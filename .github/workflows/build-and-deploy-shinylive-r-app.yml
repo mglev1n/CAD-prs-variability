@@ -33,7 +33,7 @@ jobs:
           uses: r-lib/actions/setup-r-dependencies@v2
           with:
             packages:
-              cran::shinylive, cran:dplyr, cran:tidyr, cran:ggplot2, cran:patchwork, cran:stringr
+              cran::shinylive, cran::dplyr, cran::tidyr, cran::ggplot2, cran::patchwork, cran::stringr
   
         # Export the current working directory as the shiny app
         # using the pinned version of the Shinylive R package
