@@ -18,14 +18,15 @@ model_list <- c(
 df_ntile_norm <- read.csv("CAD_ref_ntile.csv")
 
 custom_theme <- theme_minimal() +
-    theme(
-        panel.background = element_rect(fill = "white"),
-        text = element_text(family = "Arial", size = 14),
-        plot.title = element_text(size = 16, hjust = 0.5),
-        plot.subtitle = element_text(size = 14, hjust = 0.5),
-        plot.margin = margin(20, 20, 20, 20),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5) # Updated x-axis text settings
-    )
+  theme(
+    panel.background = element_rect(fill = "white"),
+    text = element_text(family = "Arial", size = 14),
+    plot.title = element_text(size = 16, hjust = 0.5),
+    plot.subtitle = element_text(size = 14, hjust = 0.5),
+    plot.margin = margin(20, 20, 20, 20),
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    strip.placement = "outside",  # Move strips outside
+  )
 
 # Define a custom color palette inspired by JAMA colors
 jama_colors <- c(
@@ -116,6 +117,13 @@ jama_css <- "
     padding: 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   }
+  code {
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-size: 0.9em;
+    padding: 2px 4px;
+  }
 "
 
 # UI for Shiny App
@@ -127,7 +135,7 @@ ui <- fluidPage(
         "CAD PRS Variability",
         tabPanel(
             "Plot",
-            p("Plot ancestry-normalized CAD polygenic risk scores for a random selection of individuals from the 1000 Genomes + HGDP reference panel"),
+            p("Ancestry-normalized CAD polygenic risk scores are plotted for a random selection of individuals from the 1000 Genomes + HGDP reference panel. Scores are arranged on the x-axis by year of publication. For each individual, the y-axis shows the percentile rank of each CAD PGS within the reference panel. A boxplot summarizes the distribution of scores for each individual."),
             sidebarLayout(
                 sidebarPanel(
                     width = 3, # Narrower sidebar
@@ -167,17 +175,10 @@ ui <- fluidPage(
                 column(
                     12,
                     h2("About CAD PRS Variability"),
-                    p("This application visualizes the variability of Coronary Artery Disease (CAD) Polygenic Risk Scores (PRS) across different models and individuals."),
-                    h3("Key Features:"),
-                    tags$ul(
-                        tags$li("Visualize CAD PRS variability for randomly selected individuals from the 1000 Genomes + HGDP reference panel."),
-                        tags$li("Compare multiple PRS models side by side."),
-                        tags$li("Customize the number of individuals and specific PRS models to display."),
-                        tags$li("Set a specific random seed for reproducibility or generate new random selections.")
-                    ),
+                    p(HTML("This application visualizes the variability of Coronary Artery Disease (CAD) Polygenic Risk Scores (PRS) across different individuals from the 1000 Genomes + HGDP Reference Panel. CAD PGS weights were obtained from the <a href = 'https://www.pgscatalog.org/'>PGS Catalog</a>, and were used to calculate the PRS for each individual using <a href = 'https://pgsc-calc.readthedocs.io/en/latest/'><code>pgsc_calc</code></a>. The Z_norm2 approach was applied to normalize risk scores and their variance across population groups using PCA.")),                    
                     h3("Data Source:"),
                     p(
-                        "The PRS models used in this application are sourced from the ",
+                        "The PRS used in this application are sourced from the ",
                         tags$a(href = "https://www.pgscatalog.org/", "PGS Catalog"),
                         "focusing on those related to Coronary Artery Disease."
                     ),
@@ -196,7 +197,7 @@ ui <- fluidPage(
                     div(
                         class = "citation",
                         p(strong("Population Performance and Individual Agreement of Coronary Artery Disease Polygenic Risk Scores")),
-                        p("Sarah A. Abramowitz, Kristin Boulier, Karl Keat, Katie M. Cardone, Manu Shivakumar, John DePaolo, Renae Judy, Dokyoon Kim, Daniel J. Rader, Ritchie, Benjamin F. Voight, Bogdan Pasaniuc, Michael G. Levin, Scott M. Damrauer"),
+                        p("Sarah A. Abramowitz, Kristin Boulier, Karl Keat, Katie M. Cardone, Manu Shivakumar, John DePaolo, Renae Judy, Dokyoon Kim, Daniel J. Rader, Marylyn Ritchie, Benjamin F. Voight, Bogdan Pasaniuc, Michael G. Levin, Scott M. Damrauer"),
                         p("doi: ", a(href = "https://doi.org/10.1101/2024.07.25.24310931", "https://doi.org/10.1101/2024.07.25.24310931"))
                     ),
                     h3("About the Developers:"),
@@ -241,32 +242,44 @@ server <- function(input, output, session) {
         melt_random_ntile$variable <- factor(melt_random_ntile$variable, levels = model_list)
         
         point_plot <- ggplot(data = melt_random_ntile, aes(x = variable, y = value, color = IID, group = IID)) +
-            geom_point(size = 3) +
-            geom_hline(yintercept = 50, linetype = "dashed") +
-            facet_grid(rows = vars(IID)) +
-            scale_y_continuous(labels = scales::percent_format(scale = 1)) +
-            labs(x = "", y = "Percentile", title = paste("Seed:", current_seed())) +
-            custom_theme +
-            scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none")
+          geom_point(size = 3) +
+          geom_hline(yintercept = 50, linetype = "dashed") +
+          facet_grid(rows = vars(IID), switch = "y") +  # Move strip to the right
+          scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+          labs(x = "CAD PGS Ordered by Year of Publication", y = "Percentile", caption = paste("Seed:", current_seed())) +
+          custom_theme +
+          scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
+          theme(
+            strip.text.y = element_blank(),  # Remove strip text
+            strip.background = element_blank()  # Remove strip background
+          )
         
         beeswarm_plot <- melt_random_ntile %>%
-            ggplot(aes(y = value, x = "a", fill = IID)) +
-            geom_jitter(width = 0.2, height = 0, size = 2, alpha = 0.5, aes(color = IID)) +
-            geom_boxplot(width = 0.3, outlier.shape = NA, fill = "white", linewidth = 1) +
-            geom_hline(yintercept = 50, linetype = "dashed") +
-            facet_grid(rows = vars(IID), scales = "free_x") +
-            scale_fill_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
-            scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
-            labs(x = "", y = "Percentile") +
-            scale_y_continuous(labels = scales::percent_format(scale = 1)) +
-            custom_theme +
-            theme(
-                axis.text.x = element_blank(),
-                axis.ticks.x = element_blank()
-            )
+          ggplot(aes(y = value, x = "a", fill = IID)) +
+          geom_jitter(width = 0.2, height = 0, size = 2, alpha = 0.5, aes(color = IID)) +
+          geom_boxplot(width = 0.3, outlier.shape = NA, fill = "white", linewidth = 1) +
+          geom_hline(yintercept = 50, linetype = "dashed") +
+          facet_grid(rows = vars(IID), scales = "free_x") +  # Move strip to the right
+          scale_fill_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
+          scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
+          labs(x = "", y = NULL) +  # Remove y-axis label
+          custom_theme +
+          theme(
+            axis.text.y = element_blank(),  # Remove y-axis text
+            axis.ticks.y = element_blank(),  # Remove y-axis ticks
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank()
+          )
         
-        (point_plot | beeswarm_plot) +
-            plot_layout(ncol = 2, widths = c(9, 1))
+        # Combine plots using patchwork
+        combined_plot <- point_plot + beeswarm_plot +
+          plot_layout(ncol = 2, widths = c(9, 1)) +
+          plot_annotation(
+            theme = theme(plot.margin = margin(5.5, 5.5, 5.5, 20))  # Adjust left margin
+          ) &
+          theme(plot.margin = margin(5.5, 0, 5.5, 0))  # Remove internal margins
+        
+        return(combined_plot)
     }
     
     # Reactive value to trigger initial plot
