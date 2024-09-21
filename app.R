@@ -120,6 +120,7 @@ jama_css <- "
 
 # UI for Shiny App
 ui <- fluidPage(
+    title = "CAD PRS Variability",
     tags$head(
         tags$style(HTML(jama_css))
     ),
@@ -298,7 +299,7 @@ server <- function(input, output, session) {
 shinyApp(ui = ui, server = server)
 
 
-# vroom::vroom("shiny_plot/CAD_ref_ntile.csv") %>%
+# vroom::vroom("CAD_ref_ntile.csv") %>%
 #   select(IID, contains("ntile")) %>%
 #   pivot_longer(contains("ntile"), names_to = "variable") %>%
 #   mutate(variable = str_replace(variable, "ntile_", "")) %>%
@@ -306,21 +307,23 @@ shinyApp(ui = ui, server = server)
 #   group_by(IID) %>%
 #   slice_sample(n = 1) %>%  # Take one row per IID to make sampling faster
 #   ungroup() %>%
-#   slice_sample(n = 25) %>%  # Randomly select 25 IIDs
+#   slice_sample(n = 50) %>%  # Randomly select 25 IIDs
 #   select(IID) %>%  # Keep only the IID column
 #   # Join back with the original data to get all rows for these IIDs
 #   inner_join(
-#     vroom::vroom("shiny_plot/CAD_ref_ntile.csv") %>%
+#     vroom::vroom("CAD_ref_ntile.csv") %>%
 #       select(IID, contains("ntile")) %>%
 #       pivot_longer(contains("ntile"), names_to = "variable") %>%
 #       mutate(variable = str_replace(variable, "ntile_", "")),
 #     by = "IID"
 #   ) %>%
-#   ggplot(aes(y = value), x = "a") +
-#   ggdist::geom_swarm(dotsize = 1.5, color = "black", alpha = 0.5) +
+#   ggplot(aes(x = IID, y = value), x = "a") +
+#   geom_jitter(width = 0.2, height = 0, size = 2, alpha = 0.5, aes(color = IID)) +
+#   # ggdist::geom_swarm(dotsize = 1.5, color = "black", alpha = 0.5) +
 #   geom_boxplot(width = 0.15, outlier.shape = NA, fill = "white", linewidth = 1) +
 #   geom_hline(yintercept = 50, linetype = "dashed") +
-#   facet_wrap(~IID, scales = "free_x", nrow = 5, ncol = 5) +
+#   facet_wrap(~IID, scales = "free_x", nrow = 10, ncol = 5) +
+#   scale_color_manual(values = extend_jama_colors(50), guide = "none") +
 #   # ggsci::scale_fill_jama(guide = "none") +
 #   labs(x = "", y = "Percentile") +
 #   scale_y_continuous(labels = scales::percent_format(scale = 1)) +
