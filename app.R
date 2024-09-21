@@ -197,7 +197,8 @@ ui <- fluidPage(
                     div(
                         class = "citation",
                         p(strong("Population Performance and Individual Agreement of Coronary Artery Disease Polygenic Risk Scores")),
-                        p("Sarah A. Abramowitz, Kristin Boulier, Karl Keat, Katie M. Cardone, Manu Shivakumar, John DePaolo, Renae Judy, Dokyoon Kim, Daniel J. Rader, Marylyn Ritchie, Benjamin F. Voight, Bogdan Pasaniuc, Michael G. Levin, Scott M. Damrauer"),
+                        p("Sarah A. Abramowitz, Kristin Boulier, Karl Keat, Katie M. Cardone, Manu Shivakumar, John DePaolo, Renae Judy, Dokyoon Kim, Daniel J. Rader, Marylyn Ritchie, Benjamin F. Voight, Bogdan Pasaniuc, Michael G. Levin*, Scott M. Damrauer*"),
+                        p("* jointly supervised"),
                         p("doi: ", a(href = "https://doi.org/10.1101/2024.07.25.24310931", "https://doi.org/10.1101/2024.07.25.24310931"))
                     ),
                     h3("About the Developers:"),
