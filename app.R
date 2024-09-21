@@ -91,7 +91,7 @@ jama_css <- "
   }
   .navbar-nav > li > a:hover,
   .navbar-nav > li > a:focus {
-    background-color: #CC79A7 !important;
+    background-color: #803332 !important;
     color: #ffffff !important;
   }
   .navbar-nav > .active > a,
