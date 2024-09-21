@@ -34,6 +34,7 @@ jobs:
           with:
             packages: |
               cran::shinylive
+            extra-packages: |
               any::dplyr
               any::tidyr
               any::ggplot2
