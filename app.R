@@ -120,7 +120,6 @@ jama_css <- "
 
 # UI for Shiny App
 ui <- fluidPage(
-    title = "CAD PRS Variability",
     tags$head(
         tags$style(HTML(jama_css))
     ),

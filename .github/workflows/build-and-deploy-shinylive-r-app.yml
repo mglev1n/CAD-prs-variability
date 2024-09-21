@@ -46,7 +46,7 @@ jobs:
         - name: Create Shinylive App from working directory files
           shell: Rscript {0}
           run: |
-           shinylive::export(".", "_site")
+           shinylive::export(".", "_site", title = "CAD PRS Variability")
 
         # Upload a tar file that will work with GitHub Pages
         # Make sure to set a retention day to avoid running into a cap
