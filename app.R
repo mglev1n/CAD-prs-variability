@@ -3,6 +3,8 @@ library(ggplot2)
 library(patchwork)
 library(stringr)
 library(tidyr)
+library(lubridate)
+library(forcats)
 
 # Define the list of models
 model_list <- c(
@@ -16,6 +18,12 @@ model_list <- c(
 )
 
 df_ntile_norm <- read.csv("CAD_ref_ntile.csv")
+
+pgs_dates <- read.csv("PGS_dates.csv") %>%
+  mutate(PGS_date = lubridate::mdy(PGS_date)) %>%
+  mutate(PGS_year = lubridate::year(PGS_date)) %>%
+  arrange(PGS_date) %>%
+  mutate(PGS_ID = forcats::fct_inorder(PGS_ID))
 
 custom_theme <- theme_minimal() +
   theme(
@@ -200,10 +208,10 @@ ui <- fluidPage(
                         p(strong("Population Performance and Individual Agreement of Coronary Artery Disease Polygenic Risk Scores")),
                         p("Sarah A. Abramowitz, Kristin Boulier, Karl Keat, Katie M. Cardone, Manu Shivakumar, John DePaolo, Renae Judy, Dokyoon Kim, Daniel J. Rader, Marylyn Ritchie, Benjamin F. Voight, Bogdan Pasaniuc, Michael G. Levin*, Scott M. Damrauer*"),
                         p("* jointly supervised"),
-                        p("doi: ", a(href = "https://doi.org/10.1101/2024.07.25.24310931", "https://doi.org/10.1101/2024.07.25.24310931"))
+                        p("doi: ", a(href = "https://doi.org/10.1101/2024.07.25.24310931", "https://doi.org/10.1101/2024.07.25.24310931", target="_blank"))
                     ),
                     h3("About the Developers:"),
-                    p("This application was developed by Sarah Abramowitz and Michael Levin at the University of Pennsylvania. Application source code is available on ", tags$a(href = "https://github.com/mglev1n/CAD-prs-variability", "GitHub."), "For more information or to report issues, please contact ", tags$a(href = "mailto:Michael.Levin@pennmedicine.upenn.edu", "Michael.Levin@pennmedicine.upenn.edu.")),
+                    p("This application was developed by Sarah Abramowitz and Michael Levin at the University of Pennsylvania. Application source code is available on ", tags$a(href = "https://github.com/mglev1n/CAD-prs-variability", "GitHub.", target="_blank"), "For more information or to report issues, please contact ", tags$a(href = "mailto:Michael.Levin@pennmedicine.upenn.edu", "Michael.Levin@pennmedicine.upenn.edu.", target="_blank")),
                 )
             )
         )
@@ -239,21 +247,27 @@ server <- function(input, output, session) {
         
         melt_random_ntile <- random_ntile %>%
             pivot_longer(cols = -IID, names_to = "variable", values_to = "value") %>%
-            mutate(variable = gsub("ntile_", "", variable))
+            mutate(variable = gsub("ntile_", "", variable)) %>%
+            left_join(pgs_dates, by = c("variable" = "PGS_ID"))
         
-        melt_random_ntile$variable <- factor(melt_random_ntile$variable, levels = model_list)
+        # melt_random_ntile$variable <- factor(melt_random_ntile$variable, levels = model_list)
         
         point_plot <- ggplot(data = melt_random_ntile, aes(x = variable, y = value, color = IID, group = IID)) +
           geom_point(size = 3) +
           geom_hline(yintercept = 50, linetype = "dashed") +
-          facet_grid(rows = vars(IID), switch = "y") +  # Move strip to the right
+          facet_grid(rows = vars(IID), cols = vars(PGS_year), switch = "y", scales = "free_x", space = "free_x") +  # Move strip to the right
           scale_y_continuous(labels = scales::percent_format(scale = 1)) +
           labs(x = "CAD PGS Ordered by Year of Publication", y = "Percentile", caption = paste("Seed:", current_seed())) +
           custom_theme +
           scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
           theme(
-            strip.text.y = element_blank(),  # Remove strip text
-            strip.background = element_blank()  # Remove strip background
+            strip.text.y = element_blank(),  # Remove strip text for rows
+            strip.background = element_blank(),  # Remove strip background
+            strip.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),  # Rotate year labels
+            panel.spacing.x = unit(0, "lines"),  # Remove spacing between year facets
+            # axis.text.x = element_blank(),  # Remove x-axis text
+            # axis.ticks.x = element_blank(),  # Remove x-axis ticks
+            panel.border = element_rect(color = "grey50", fill = NA, linewidth = 0.5)  # Add border around each facet
           )
         
         beeswarm_plot <- melt_random_ntile %>%
