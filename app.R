@@ -129,6 +129,7 @@ jama_css <- "
 # UI for Shiny App
 ui <- fluidPage(
     tags$head(
+        includeHTML("google-analytics.html"),
         tags$style(HTML(jama_css))
     ),
     navbarPage(
