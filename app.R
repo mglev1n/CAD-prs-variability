@@ -146,36 +146,46 @@ ui <- fluidPage(
             "Plot",
             p("Ancestry-normalized CAD polygenic risk scores are plotted for a random selection of individuals from the 1000 Genomes + HGDP reference panel. Scores are arranged on the x-axis by year of publication. For each individual, the y-axis shows the percentile rank of each CAD PGS within the reference panel. A boxplot summarizes the distribution of scores for each individual."),
             sidebarLayout(
-                sidebarPanel(
-                    width = 3, # Narrower sidebar
-                    actionButton("plot_button", "Plot PGS Variability", class = "btn-block"),
-                    hr(),
-                    checkboxInput("show_advanced", "Show Advanced Options", FALSE),
-                    conditionalPanel(
-                        condition = "input.show_advanced == true",
-                        selectInput("selected_models",
-                                    label = "Select CAD PGS",
-                                    choices = model_list,
-                                    selected = model_list,
-                                    multiple = TRUE
-                        ),
-                        numericInput("seed_input",
-                                     label = "Set Random Seed (leave empty for random)",
-                                     value = NA
-                        ),
-                        sliderInput("sample_size_input",
-                                    label = "Select number of individuals",
-                                    min = 1,
-                                    max = 10,
-                                    value = 5,
-                                    step = 1
-                        )
-                    )
-                ),
-                mainPanel(
-                    width = 9, # Wider main panel
-                    plotOutput("score_plot", height = "600px")
+              sidebarPanel(
+                width = 3,
+                actionButton("plot_button", "Plot PGS Variability", class = "btn-block"),
+                hr(),
+                checkboxInput("show_advanced", "Show Advanced Options", FALSE),
+                conditionalPanel(
+                  condition = "input.show_advanced == true",
+                  selectInput("selected_models",
+                              label = "Select CAD PGS",
+                              choices = model_list,
+                              selected = model_list,
+                              multiple = TRUE
+                  ),
+                  numericInput("seed_input",
+                               label = "Set Random Seed (leave empty for random)",
+                               value = NA
+                  ),
+                  sliderInput("sample_size_input",
+                              label = "Select number of individuals",
+                              min = 1,
+                              max = 10,
+                              value = 5,
+                              step = 1
+                  ),
+                  # Add a new range slider for year selection
+                  sliderInput("year_range",
+                              label = "Select Year Range",
+                              min = min(pgs_dates$PGS_year),
+                              max = max(pgs_dates$PGS_year),
+                              value = c(min(pgs_dates$PGS_year), max(pgs_dates$PGS_year)),
+                              step = 1,
+                              sep = ""
+                  )
                 )
+              ),
+              mainPanel(
+                width = 9,
+                textOutput("year_range_text"),
+                plotOutput("score_plot", height = "600px")
+              )
             )
         ),
         tabPanel(
@@ -219,108 +229,126 @@ ui <- fluidPage(
 )
 
 # Server logic
+# Server logic
 server <- function(input, output, session) {
-    # Reactive value to store the current seed
-    current_seed <- reactiveVal(NULL)
+  current_seed <- reactiveVal(NULL)
+  
+  selected_years <- reactive({
+    if (is.null(input$selected_models)) {
+      pgs_dates$PGS_year
+    } else {
+      pgs_dates %>%
+        filter(PGS_ID %in% input$selected_models) %>%
+        pull(PGS_year)
+    }
+  })
+  
+  observe({
+    updateSliderInput(session, "year_range",
+                      min = min(selected_years()),
+                      max = max(selected_years()),
+                      value = c(min(selected_years()), max(selected_years()))
+    )
+  })
+  
+  generate_plot <- function() {
+    model_selection <- if (is.null(input$selected_models)) model_list else input$selected_models
     
-    # Function to generate the plot
-    generate_plot <- function() {
-        model_selection <- if (is.null(input$selected_models)) model_list else input$selected_models
-        
-        # Use the seed from advanced options if set, otherwise generate a new one
-        if (!is.na(input$seed_input) && !is.null(input$seed_input)) {
-            seed_value <- input$seed_input
-        } else {
-            seed_value <- as.integer(runif(1) * 1e6) # Generate a random seed
-            showNotification(paste("Using a randomly generated seed:", seed_value), type = "message")
-        }
-        current_seed(seed_value) # Store the current seed
-        
-        set.seed(seed_value)
-        
-        ntile_list <- paste("ntile_", model_selection, sep = "")
-        sample_size <- ifelse(is.null(input$sample_size_input), 5, input$sample_size_input)
-        random_ntile <- sample_n(df_ntile_norm, sample_size) %>% select(IID, all_of(ntile_list))
-        
-        random_ntile <- sample_n(df_ntile_norm, sample_size) %>% 
-            select(IID, all_of(ntile_list))
-        
-        melt_random_ntile <- random_ntile %>%
-            pivot_longer(cols = -IID, names_to = "variable", values_to = "value") %>%
-            mutate(variable = gsub("ntile_", "", variable)) %>%
-            left_join(pgs_dates, by = c("variable" = "PGS_ID"))
-        
-        # melt_random_ntile$variable <- factor(melt_random_ntile$variable, levels = model_list)
-        
-        point_plot <- ggplot(data = melt_random_ntile, aes(x = variable, y = value, color = IID, group = IID)) +
-          geom_point(size = 3) +
-          geom_hline(yintercept = 50, linetype = "dashed") +
-          facet_grid(rows = vars(IID), cols = vars(PGS_year), switch = "y", scales = "free_x", space = "free_x") +  # Move strip to the right
-          scale_y_continuous(labels = scales::percent_format(scale = 1)) +
-          labs(x = "CAD PGS Ordered by Year of Publication", y = "Percentile", caption = paste("Seed:", current_seed())) +
-          custom_theme +
-          scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
-          theme(
-            strip.text.y = element_blank(),  # Remove strip text for rows
-            strip.background = element_blank(),  # Remove strip background
-            strip.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),  # Rotate year labels
-            panel.spacing.x = unit(0, "lines"),  # Remove spacing between year facets
-            # axis.text.x = element_blank(),  # Remove x-axis text
-            # axis.ticks.x = element_blank(),  # Remove x-axis ticks
-            panel.border = element_rect(color = "grey50", fill = NA, linewidth = 0.5)  # Add border around each facet
-          )
-        
-        beeswarm_plot <- melt_random_ntile %>%
-          ggplot(aes(y = value, x = "a", fill = IID)) +
-          geom_jitter(width = 0.2, height = 0, size = 2, alpha = 0.5, aes(color = IID)) +
-          geom_boxplot(width = 0.3, outlier.shape = NA, fill = "white", linewidth = 1) +
-          geom_hline(yintercept = 50, linetype = "dashed") +
-          facet_grid(rows = vars(IID), scales = "free_x") +  # Move strip to the right
-          scale_fill_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
-          scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
-          labs(x = "", y = NULL) +  # Remove y-axis label
-          custom_theme +
-          theme(
-            axis.text.y = element_blank(),  # Remove y-axis text
-            axis.ticks.y = element_blank(),  # Remove y-axis ticks
-            axis.text.x = element_blank(),
-            axis.ticks.x = element_blank()
-          )
-        
-        # Combine plots using patchwork
-        combined_plot <- point_plot + beeswarm_plot +
-          plot_layout(ncol = 2, widths = c(9, 1)) +
-          plot_annotation(
-            theme = theme(plot.margin = margin(5.5, 5.5, 5.5, 20))  # Adjust left margin
-          ) &
-          theme(plot.margin = margin(5.5, 0, 5.5, 0))  # Remove internal margins
-        
-        return(combined_plot)
+    filtered_pgs_dates <- pgs_dates %>%
+      filter(PGS_year >= input$year_range[1] & PGS_year <= input$year_range[2])
+    
+    model_selection <- intersect(model_selection, filtered_pgs_dates$PGS_ID)
+    
+    seed_value <- if (!is.na(input$seed_input) && !is.null(input$seed_input)) {
+      input$seed_input
+    } else {
+      as.integer(runif(1) * 1e6)
     }
     
-    # Reactive value to trigger initial plot
-    initial_load <- reactiveVal(FALSE)
+    current_seed(seed_value)
+    set.seed(seed_value)
     
-    # Observe the plot button click
-    observeEvent(input$plot_button, {
-        output$score_plot <- renderPlot({
-            generate_plot()
-        })
-    })
+    if (is.na(input$seed_input) || is.null(input$seed_input)) {
+      showNotification(paste("Using a randomly generated seed:", seed_value), type = "message")
+    }
     
-    # Automatically generate plot on app startup
-    observe({
-        req(initial_load())
-        output$score_plot <- renderPlot({
-            generate_plot()
-        })
-    })
+    ntile_list <- paste("ntile_", model_selection, sep = "")
+    sample_size <- ifelse(is.null(input$sample_size_input), 5, input$sample_size_input)
+    random_ntile <- sample_n(df_ntile_norm, sample_size) %>% select(IID, all_of(ntile_list))
     
-    # Set initial_load to TRUE after a short delay
-    # This ensures all reactive elements are properly initialized
-    session$onFlushed(function() {
-        initial_load(TRUE)
+    melt_random_ntile <- random_ntile %>%
+      pivot_longer(cols = -IID, names_to = "variable", values_to = "value") %>%
+      mutate(variable = gsub("ntile_", "", variable)) %>%
+      left_join(filtered_pgs_dates, by = c("variable" = "PGS_ID"))
+    
+    point_plot <- ggplot(data = melt_random_ntile, aes(x = variable, y = value, color = IID, group = IID)) +
+      geom_point(size = 3) +
+      geom_hline(yintercept = 50, linetype = "dashed") +
+      facet_grid(rows = vars(IID), cols = vars(PGS_year), switch = "y", scales = "free_x", space = "free_x") +
+      scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+      labs(x = "CAD PGS Ordered by Year of Publication", y = "Percentile", caption = paste("Seed:", seed_value)) +
+      custom_theme +
+      scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
+      theme(
+        strip.text.y = element_blank(),
+        strip.background = element_blank(),
+        strip.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
+        panel.spacing.x = unit(0, "lines"),
+        # axis.text.x = element_blank(),
+        # axis.ticks.x = element_blank(),
+        panel.border = element_rect(color = "grey50", fill = NA, size = 0.5)
+      )
+    
+    beeswarm_plot <- melt_random_ntile %>%
+      ggplot(aes(y = value, x = "a", fill = IID)) +
+      geom_jitter(width = 0.2, height = 0, size = 2, alpha = 0.5, aes(color = IID)) +
+      geom_boxplot(width = 0.3, outlier.shape = NA, fill = "white", linewidth = 1) +
+      geom_hline(yintercept = 50, linetype = "dashed") +
+      facet_grid(rows = vars(IID), scales = "free_x") +
+      scale_fill_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
+      scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
+      labs(x = "", y = NULL) +
+      custom_theme +
+      theme(
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()
+      )
+    
+    combined_plot <- point_plot + beeswarm_plot +
+      plot_layout(ncol = 2, widths = c(9, 1)) +
+      plot_annotation(
+        theme = theme(plot.margin = margin(5.5, 5.5, 25, 20))
+      ) &
+      theme(plot.margin = margin(5.5, 0, 5.5, 0))
+    
+    return(combined_plot)
+  }
+  
+  observeEvent(input$plot_button, {
+    output$score_plot <- renderPlot({
+      generate_plot()
     })
+  })
+  
+  # output$year_range_text <- renderText({
+  #   paste("Showing scores from", input$year_range[1], "to", input$year_range[2])
+  # })
+  
+  # Automatically generate plot on app startup
+  observe({
+    req(initial_load())
+    output$score_plot <- renderPlot({
+      generate_plot()
+    })
+  })
+  
+  # Set initial_load to TRUE after a short delay
+  initial_load <- reactiveVal(FALSE)
+  session$onFlushed(function() {
+    initial_load(TRUE)
+  })
 }
 
 # Run the application
