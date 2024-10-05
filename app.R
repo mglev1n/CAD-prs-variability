@@ -164,11 +164,12 @@ ui <- fluidPage(
                 checkboxInput("show_advanced", "Show Advanced Options", FALSE),
                 conditionalPanel(
                   condition = "input.show_advanced == true",
-                  selectInput("selected_models",
-                              label = "Select CAD PRS",
-                              choices = model_list,
-                              selected = model_list,
-                              multiple = TRUE
+                  selectizeInput("selected_models",
+                                 label = "Select CAD PRS",
+                                 choices = model_list,
+                                 selected = model_list,
+                                 multiple = TRUE,
+                                 options = list(plugins = list('remove_button', 'drag_drop'))
                   ),
                   numericInput("seed_input",
                                label = "Set Random Seed (leave empty for random)",
@@ -181,7 +182,6 @@ ui <- fluidPage(
                               value = 5,
                               step = 1
                   ),
-                  # Add a new range slider for year selection
                   sliderInput("year_range",
                               label = "Select Year Range",
                               min = min(pgs_dates$PGS_year),
@@ -189,7 +189,8 @@ ui <- fluidPage(
                               value = c(min(pgs_dates$PGS_year), max(pgs_dates$PGS_year)),
                               step = 1,
                               sep = ""
-                  )
+                  ),
+                  actionButton("reset_button", "Reset", class = "btn-block")
                 )
               ),
               mainPanel(
@@ -242,6 +243,7 @@ ui <- fluidPage(
 # Server logic
 # Server logic
 server <- function(input, output, session) {
+  plot_data <- reactiveVal(NULL)
   current_seed <- reactiveVal(NULL)
   
   selected_years <- reactive({
@@ -260,6 +262,24 @@ server <- function(input, output, session) {
                       max = max(selected_years()),
                       value = c(min(selected_years()), max(selected_years()))
     )
+  })
+  
+  observeEvent(input$reset_button, {
+    # Reset selected models
+    updateSelectizeInput(session, "selected_models", selected = model_list)
+    
+    # Reset seed input
+    updateNumericInput(session, "seed_input", value = NA)
+    
+    # Reset sample size
+    updateSliderInput(session, "sample_size_input", value = 5)
+    
+    # Reset year range
+    updateSliderInput(session, "year_range", 
+                      value = c(min(pgs_dates$PGS_year), max(pgs_dates$PGS_year)))
+    
+    # Show a notification
+    showNotification("Advanced options reset to default values", type = "message")
   })
   
   generate_plot <- function() {
@@ -335,21 +355,23 @@ server <- function(input, output, session) {
   }
   
   observeEvent(input$plot_button, {
-    output$score_plot <- renderPlot({
-      generate_plot()
-    })
+    plot_data(generate_plot())
   })
   
   # output$year_range_text <- renderText({
   #   paste("Showing scores from", input$year_range[1], "to", input$year_range[2])
   # })
   
-  # Automatically generate plot on app startup
+  output$score_plot <- renderPlot({
+    req(plot_data())
+    plot_data()
+  })
+  
   observe({
     req(initial_load())
-    output$score_plot <- renderPlot({
-      generate_plot()
-    })
+    if (is.null(plot_data())) {
+      plot_data(generate_plot())
+    }
   })
   
   # Set initial_load to TRUE after a short delay
