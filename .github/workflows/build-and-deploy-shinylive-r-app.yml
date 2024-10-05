@@ -5,14 +5,15 @@ on:
         types: [published]
     workflow_dispatch: {}
    
-name: demo-r-shinylive-app
+name: deploy-shinylive-app
 
 jobs:
-    demo-website:
+    deploy-website:
       runs-on: ubuntu-latest
       # Only restrict concurrency for non-PR jobs
       concurrency:
         group: r-shinylive-website-${{ github.event_name != 'pull_request' || github.run_id }}
+        cancel-in-progress: false
       # Describe the permissions for obtain repository contents and 
       # deploying a GitHub pages website for the repository
       permissions:
