@@ -209,7 +209,7 @@ ui <- fluidPage(
                     h3("Data Source:"),
                     p(
                         "The PRS used in this application are sourced from the ",
-                        tags$a(href = "https://www.pgscatalog.org/", "PGS Catalog"),
+                        tags$a(href = "https://www.pgscatalog.org/", "PGS Catalog", target='_blank'),
                         "focusing on those related to Coronary Artery Disease."
                     ),
                     h3("How to Use:"),
