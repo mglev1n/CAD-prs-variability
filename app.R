@@ -197,11 +197,11 @@ ui <- fluidPage(
                 column(
                     12,
                     h2("About CAD PRS Variability"),
-                    p(HTML("This application visualizes the variability of Coronary Artery Disease (CAD) Polygenic Risk Scores (PRS) across different individuals from the 1000 Genomes + HGDP Reference Panel. CAD PRS weights were obtained from the <a href = 'https://www.pgscatalog.org/'>PGS Catalog</a>, and were used to calculate the PRS for each individual using <a href = 'https://pgsc-calc.readthedocs.io/en/latest/'><code>pgsc_calc</code></a>. The Z_norm2 approach was applied to normalize risk scores and their variance across population groups using PCA.")),                    
+                    p(HTML("This application visualizes the variability of Coronary Artery Disease (CAD) Polygenic Risk Scores (PRS) across different individuals from the 1000 Genomes + HGDP Reference Panel. CAD PRS weights were obtained from the <a href = 'https://www.pgscatalog.org/'>PGS Catalog</a>, and were used to calculate the PRS for each individual using <a href = 'https://pgsc-calc.readthedocs.io/en/latest/'><code>pgsc_calc</code>, target="_blank"</a>. The Z_norm2 approach was applied to normalize risk scores and their variance across population groups using PCA.")),                    
                     h3("Data Source:"),
                     p(
                         "The PRS used in this application are sourced from the ",
-                        tags$a(href = "https://www.pgscatalog.org/", "PGS Catalog"),
+                        tags$a(href = "https://www.pgscatalog.org/", "PGS Catalog", target="_blank"),
                         "focusing on those related to Coronary Artery Disease."
                     ),
                     h3("How to Use:"),
