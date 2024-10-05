@@ -34,6 +34,7 @@ custom_theme <- theme_minimal() +
     plot.margin = margin(20, 20, 20, 20),
     axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
     strip.placement = "outside",  # Move strips outside
+    panel.border = element_rect(fill = NA)
   )
 
 # Define a custom color palette inspired by JAMA colors
@@ -281,14 +282,14 @@ server <- function(input, output, session) {
       mutate(variable = gsub("ntile_", "", variable)) %>%
       left_join(filtered_pgs_dates, by = c("variable" = "PGS_ID"))
     
-    point_plot <- ggplot(data = melt_random_ntile, aes(x = variable, y = value, color = IID, group = IID)) +
-      geom_point(size = 3) +
+    point_plot <- ggplot(data = melt_random_ntile, aes(x = variable, y = value, fill = IID, group = IID)) +
       geom_hline(yintercept = 50, linetype = "dashed") +
+      geom_point(size = 3, shape = 21) +
       facet_grid(rows = vars(IID), cols = vars(PGS_year), switch = "y", scales = "free_x", space = "free_x") +
       scale_y_continuous(labels = scales::percent_format(scale = 1)) +
       labs(x = "CAD PGS Ordered by Year of Publication", y = "Percentile", caption = paste("Seed:", seed_value)) +
       custom_theme +
-      scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
+      scale_fill_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
       theme(
         strip.text.y = element_blank(),
         strip.background = element_blank(),
@@ -296,17 +297,16 @@ server <- function(input, output, session) {
         panel.spacing.x = unit(0, "lines"),
         # axis.text.x = element_blank(),
         # axis.ticks.x = element_blank(),
-        panel.border = element_rect(color = "grey50", fill = NA, size = 0.5)
       )
     
     beeswarm_plot <- melt_random_ntile %>%
       ggplot(aes(y = value, x = "a", fill = IID)) +
-      geom_jitter(width = 0.2, height = 0, size = 2, alpha = 0.5, aes(color = IID)) +
+      geom_jitter(aes(fill = IID), shape = 21, width = 0.2, height = 0, size = 2, alpha = 0.5) +
       geom_boxplot(width = 0.3, outlier.shape = NA, fill = "white", linewidth = 1) +
       geom_hline(yintercept = 50, linetype = "dashed") +
       facet_grid(rows = vars(IID), scales = "free_x") +
       scale_fill_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
-      scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
+      # scale_color_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
       labs(x = "", y = NULL) +
       custom_theme +
       theme(
