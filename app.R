@@ -28,13 +28,13 @@ pgs_dates <- read.csv("PGS_dates.csv") %>%
 custom_theme <- theme_minimal() +
   theme(
     panel.background = element_rect(fill = "white"),
-    text = element_text(family = "Arial", size = 14),
+    text = element_text(family = "sans", size = 14),
     plot.title = element_text(size = 16, hjust = 0.5),
     plot.subtitle = element_text(size = 14, hjust = 0.5),
     plot.margin = margin(20, 20, 20, 20),
     axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
     strip.placement = "outside",  # Move strips outside
-    panel.border = element_rect(fill = NA)
+    panel.border = element_rect(fill = NA, color = "grey70")
   )
 
 # Define a custom color palette inspired by JAMA colors
@@ -145,17 +145,17 @@ ui <- fluidPage(
         "CAD PRS Variability",
         tabPanel(
             "Plot",
-            p("Ancestry-normalized CAD polygenic risk scores are plotted for a random selection of individuals from the 1000 Genomes + HGDP reference panel. Scores are arranged on the x-axis by year of publication. For each individual, the y-axis shows the percentile rank of each CAD PGS within the reference panel. A boxplot summarizes the distribution of scores for each individual."),
+            p("Ancestry-normalized CAD polygenic risk scores are plotted for a random selection of individuals from the 1000 Genomes + HGDP reference panel. Scores are arranged on the x-axis by year of publication. For each individual, the y-axis shows the percentile rank of each CAD PRS within the reference panel. A boxplot summarizes the distribution of scores for each individual."),
             sidebarLayout(
               sidebarPanel(
                 width = 3,
-                actionButton("plot_button", "Plot PGS Variability", class = "btn-block"),
+                actionButton("plot_button", "Plot PRS Variability", class = "btn-block"),
                 hr(),
                 checkboxInput("show_advanced", "Show Advanced Options", FALSE),
                 conditionalPanel(
                   condition = "input.show_advanced == true",
                   selectInput("selected_models",
-                              label = "Select CAD PGS",
+                              label = "Select CAD PRS",
                               choices = model_list,
                               selected = model_list,
                               multiple = TRUE
@@ -195,7 +195,7 @@ ui <- fluidPage(
                 column(
                     12,
                     h2("About CAD PRS Variability"),
-                    p(HTML("This application visualizes the variability of Coronary Artery Disease (CAD) Polygenic Risk Scores (PRS) across different individuals from the 1000 Genomes + HGDP Reference Panel. CAD PGS weights were obtained from the <a href = 'https://www.pgscatalog.org/'>PGS Catalog</a>, and were used to calculate the PRS for each individual using <a href = 'https://pgsc-calc.readthedocs.io/en/latest/'><code>pgsc_calc</code></a>. The Z_norm2 approach was applied to normalize risk scores and their variance across population groups using PCA.")),                    
+                    p(HTML("This application visualizes the variability of Coronary Artery Disease (CAD) Polygenic Risk Scores (PRS) across different individuals from the 1000 Genomes + HGDP Reference Panel. CAD PRS weights were obtained from the <a href = 'https://www.pgscatalog.org/'>PGS Catalog</a>, and were used to calculate the PRS for each individual using <a href = 'https://pgsc-calc.readthedocs.io/en/latest/'><code>pgsc_calc</code></a>. The Z_norm2 approach was applied to normalize risk scores and their variance across population groups using PCA.")),                    
                     h3("Data Source:"),
                     p(
                         "The PRS used in this application are sourced from the ",
@@ -205,10 +205,10 @@ ui <- fluidPage(
                     h3("How to Use:"),
                     tags$ol(
                         tags$li("Navigate to the 'Plot' tab."),
-                        tags$li("Click 'Plot PGS Variability' to generate a visualization."),
+                        tags$li("Click 'Plot PRS Variability' to generate a visualization."),
                         tags$li("Use 'Advanced Options' to customize the plot:"),
                         tags$ul(
-                            tags$li("Select specific CAD PGS models to include."),
+                            tags$li("Select specific CAD PRS models to include."),
                             tags$li("Set a random seed for reproducibility."),
                             tags$li("Adjust the number of individuals to display.")
                         )
@@ -287,16 +287,14 @@ server <- function(input, output, session) {
       geom_point(size = 3, shape = 21) +
       facet_grid(rows = vars(IID), cols = vars(PGS_year), switch = "y", scales = "free_x", space = "free_x") +
       scale_y_continuous(labels = scales::percent_format(scale = 1)) +
-      labs(x = "CAD PGS Ordered by Year of Publication", y = "Percentile", caption = paste("Seed:", seed_value)) +
+      labs(x = "CAD PRS Ordered by Year of Publication", y = "Percentile", caption = paste("Seed:", seed_value)) +
       custom_theme +
       scale_fill_manual(values = extend_jama_colors(length(unique(melt_random_ntile$IID))), guide = "none") +
       theme(
         strip.text.y = element_blank(),
         strip.background = element_blank(),
         strip.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
-        panel.spacing.x = unit(0, "lines"),
-        # axis.text.x = element_blank(),
-        # axis.ticks.x = element_blank(),
+        panel.spacing.x = unit(0, "lines")
       )
     
     beeswarm_plot <- melt_random_ntile %>%
