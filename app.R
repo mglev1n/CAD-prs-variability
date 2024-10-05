@@ -1,9 +1,9 @@
 library(dplyr)
 library(ggplot2)
 library(patchwork)
-library(stringr)
+# library(stringr)
 library(tidyr)
-library(lubridate)
+# library(lubridate)
 library(forcats)
 
 # Define the list of models
@@ -20,8 +20,10 @@ model_list <- c(
 df_ntile_norm <- read.csv("CAD_ref_ntile.csv")
 
 pgs_dates <- read.csv("PGS_dates.csv") %>%
-  mutate(PGS_date = lubridate::mdy(PGS_date)) %>%
-  mutate(PGS_year = lubridate::year(PGS_date)) %>%
+  mutate(PGS_date = as.Date(PGS_date, format = "%m/%d/%Y"),
+         PGS_year = as.integer(format(PGS_date, "%Y"))) %>%
+  mutate(PGS_year = as.integer(paste0("20", PGS_year))) %>%
+  arrange(PGS_date) %>%
   arrange(PGS_date) %>%
   mutate(PGS_ID = forcats::fct_inorder(PGS_ID))
 
