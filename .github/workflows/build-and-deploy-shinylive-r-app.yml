@@ -39,8 +39,8 @@ jobs:
         shell: Rscript {0}
         run: |
           shinylive::export(".", "_site", 
-            title = "CAD PRS Variability", 
             template_params = list(
+              title = "CAD PRS Variability",
               include_in_head = paste0(
                 "<script async src='https://www.googletagmanager.com/gtag/js?id=G-QK378MNTCR'></script>\n",
                 "<script>\n",
