@@ -147,7 +147,7 @@ ui <- fluidPage(
         "CAD PRS Variability",
         tabPanel(
             "Plot",
-            p("Ancestry-normalized CAD polygenic risk scores are plotted for a random selection of individuals from the 1000 Genomes + HGDP reference panel. Scores are arranged on the x-axis by year of publication. For each individual, the y-axis shows the percentile rank of each CAD PRS within the reference panel. A boxplot summarizes the distribution of scores for each individual."),
+            p("Ancestry-normalized CAD polygenic risk scores (PRS) are plotted for a random selection of individuals from the 1000 Genomes + HGDP reference panel. Scores are arranged on the x-axis by year of publication. For each individual, the y-axis shows the percentile rank of each CAD PRS within the reference panel. A boxplot summarizes the distribution of scores for each individual."),
             sidebarLayout(
               sidebarPanel(
                 width = 3,
