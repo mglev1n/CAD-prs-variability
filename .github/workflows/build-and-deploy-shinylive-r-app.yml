@@ -1,64 +1,64 @@
-on:
-    push:
-      branches: [main, master]
-    release:
-        types: [published]
-    workflow_dispatch: {}
-   
 name: deploy-shinylive-app
 
+on:
+  push:
+    branches: [main, master]
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
 jobs:
-    deploy-website:
-      runs-on: ubuntu-latest
-      # Only restrict concurrency for non-PR jobs
-      concurrency:
-        group: r-shinylive-website-${{ github.event_name != 'pull_request' || github.run_id }}
-        cancel-in-progress: false
-      # Describe the permissions for obtain repository contents and 
-      # deploying a GitHub pages website for the repository
-      permissions:
-        contents: read
-        pages: write
-        id-token: write
-      steps:
-        # Obtain the contents of the repository
-        - name: "Check out repository"
-          uses: actions/checkout@v4
+  deploy-website:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: r-shinylive-website-${{ github.event_name != 'pull_request' || github.run_id }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: "Check out repository"
+        uses: actions/checkout@v4
 
-        # Install R on the GitHub Actions worker
-        - name: "Setup R"
-          uses: r-lib/actions/setup-r@v2
-  
-        # Install and pin the shinylive R package dependency
-        - name: "Setup R dependency for Shinylive App export"
-          uses: r-lib/actions/setup-r-dependencies@v2
-          with:
-            packages: |
-              cran::shinylive
-            extra-packages: |
-              any::dplyr
-              any::tidyr
-              any::ggplot2
-              any::patchwork
-  
-        # Export the current working directory as the shiny app
-        # using the pinned version of the Shinylive R package
-        - name: Create Shinylive App from working directory files
-          shell: Rscript {0}
-          run: |
-           shinylive::export(".", "_site", title = "CAD PRS Variability")
+      - name: "Setup R"
+        uses: r-lib/actions/setup-r@v2
 
-        # Upload a tar file that will work with GitHub Pages
-        # Make sure to set a retention day to avoid running into a cap
-        # This artifact shouldn't be required after deployment onto pages was a success.
-        - name: Upload Pages artifact
-          uses: actions/upload-pages-artifact@v3
-          with:
-            retention-days: 1
-        
-        # Use an Action deploy to push the artifact onto GitHub Pages
-        # This requires the `Action` tab being structured to allow for deployment
-        # instead of using `docs/` or the `gh-pages` branch of the repository
-        - name: Deploy to GitHub Pages
-          id: deployment
-          uses: actions/deploy-pages@v4
+      - name: "Setup R dependency for Shinylive App export"
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            cran::shinylive
+          extra-packages: |
+            any::dplyr
+            any::tidyr
+            any::ggplot2
+            any::patchwork
+
+      - name: Create Shinylive App from working directory files
+        shell: Rscript {0}
+        run: |
+          shinylive::export(".", "_site", 
+            title = "CAD PRS Variability", 
+            template_params = list(
+              include_in_head = paste0(
+                "<script async src='https://www.googletagmanager.com/gtag/js?id=G-QK378MNTCR'></script>\n",
+                "<script>\n",
+                "  window.dataLayer = window.dataLayer || [];\n",
+                "  function gtag(){dataLayer.push(arguments);}\n",
+                "  gtag('js', new Date());\n",
+                "\n",
+                "  gtag('config', 'G-QK378MNTCR');\n",
+                "</script>"
+              )
+            )
+          )
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          retention-days: 1
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
