@@ -140,6 +140,16 @@ jama_css <- "
 # UI for Shiny App
 ui <- fluidPage(
     tags$head(
+      HTML(paste0(
+        "<script async src='https://www.googletagmanager.com/gtag/js?id=G-QK378MNTCR'></script>\n",
+        "<script>\n",
+        "  window.dataLayer = window.dataLayer || [];\n",
+        "  function gtag(){dataLayer.push(arguments);}\n",
+        "  gtag('js', new Date());\n",
+        "\n",
+        "  gtag('config', 'G-QK378MNTCR');\n",
+        "</script>"
+      )),
         tags$style(HTML(jama_css))
     ),
     navbarPage(
