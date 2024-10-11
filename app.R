@@ -315,7 +315,7 @@ server <- function(input, output, session) {
     
     point_plot <- ggplot(data = melt_random_ntile, aes(x = variable, y = value, fill = IID, group = IID)) +
       geom_hline(yintercept = 50, linetype = "dashed") +
-      geom_point(size = 3, shape = 21) +
+      geom_jitter(size = 3, shape = 21, height = rnorm(1, 2.5, 1), width = 0) +
       facet_grid(rows = vars(IID), cols = vars(PGS_year), switch = "y", scales = "free_x", space = "free_x") +
       scale_y_continuous(labels = scales::percent_format(scale = 1)) +
       labs(x = "CAD PRS Ordered by Year of Publication", y = "Percentile", caption = paste("Seed:", seed_value)) +
