@@ -50,7 +50,9 @@ jobs:
                 "\n",
                 "  gtag('config', 'G-QK378MNTCR');\n",
                 "</script>"
-              )
+              ),
+              include_before_body = paste0("Loading CAD PRS Variability\n",
+              "this may take a few seconds...")
             )
           )
 
