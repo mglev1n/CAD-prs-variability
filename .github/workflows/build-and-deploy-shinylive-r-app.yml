@@ -42,6 +42,7 @@ jobs:
             template_params = list(
               title = "CAD PRS Variability",
               include_in_head = paste0(
+                "<link rel='icon' type='image/svg+xml' href='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5OTAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1kbmEiPjxwYXRoIGQ9Im0xMCAxNiAxLjUgMS41Ii8+PHBhdGggZD0ibTE0IDgtMS41LTEuNSIvPjxwYXRoIGQ9Ik0xNSAyYy0xLjc5OCAxLjk5OC0yLjUxOCAzLjk5NS0yLjgwNyA1Ljk5MyIvPjxwYXRoIGQ9Im0xNi41IDEwLjUgMSAxIi8+PHBhdGggZD0ibTE3IDYtMi44OTEtMi44OTEiLz48cGF0aCBkPSJNMiAxNWM2LjY2Ny02IDEzLjMzMyAwIDIwLTYiLz48cGF0aCBkPSJtMjAgOSAuODkxLjg5MSIvPjxwYXRoIGQ9Ik0zLjEwOSAxNC4xMDkgNCAxNSIvPjxwYXRoIGQ9Im02LjUgMTIuNSAxIDEiLz48cGF0aCBkPSJtNyAxOCAyLjg5MSAyLjg5MSIvPjxwYXRoIGQ9Ik05IDIyYzEuNzk4LTEuOTk4IDIuNTE4LTMuOTk1IDIuODA3LTUuOTkzIi8+PC9zdmc+'/>",
                 "<script async src='https://www.googletagmanager.com/gtag/js?id=G-QK378MNTCR'></script>\n",
                 "<script>\n",
                 "  window.dataLayer = window.dataLayer || [];\n",
