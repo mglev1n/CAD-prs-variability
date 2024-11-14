@@ -280,7 +280,6 @@ ui <- fluidPage(
                       tags$li("Use 'Advanced Options' to customize the plot:"),
                       tags$ul(
                         tags$li("Select specific CAD PRS models to include."),
-                        tags$li("Adjust the number of individuals to display.")
                       )
                     ),
                     h3("Manuscript Citation:"),
