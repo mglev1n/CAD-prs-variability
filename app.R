@@ -282,13 +282,14 @@ ui <- fluidPage(
                         tags$li("Select specific CAD PRS models to include."),
                       )
                     ),
-                    h3("Manuscript Citation:"),
+h3("Manuscript Citation:"),
                     div(
                         class = "citation",
-                        p(strong("Population Performance and Individual Agreement of Coronary Artery Disease Polygenic Risk Scores")),
-                        p("Sarah A. Abramowitz, Kristin Boulier, Karl Keat, Katie M. Cardone, Manu Shivakumar, John DePaolo, Renae Judy, Dokyoon Kim, Daniel J. Rader, Marylyn Ritchie, Benjamin F. Voight, Bogdan Pasaniuc, Michael G. Levin*, Scott M. Damrauer*"),
+                        p(strong("Evaluating Performance and Agreement of Coronary Heart Disease Polygenic Risk Scores")),
+                        p("Sarah A. Abramowitz, BA; Kristin Boulier, MD; Karl Keat, BS; Katie M. Cardone, BS; Manu Shivakumar, BS; John DePaolo, MD, PhD; Renae Judy, MS; Francisca Bermudez, BA; Nour Mimouni, BA; Christopher Neylan, MD; Dokyoon Kim, PhD; Daniel J. Rader, MD; Marylyn D. Ritchie, PhD; Benjamin F. Voight, PhD; Bogdan Pasaniuc, PhD; Michael G. Levin, MD*; Scott M. Damrauer, MD*; for the Penn Medicine BioBank"),
                         p("* jointly supervised"),
-                        p("doi: ", a(href = "https://doi.org/10.1101/2024.07.25.24310931", "https://doi.org/10.1101/2024.07.25.24310931", target="_blank"))
+                        p("JAMA. Published online November 16, 2024"),
+                        p("doi: ", a(href = "https://doi.org/10.1001/jama.2024.23784", "10.1001/jama.2024.23784", target="_blank"))
                     ),
                     h3("About the Developers:"),
                     p("This application was developed by Sarah Abramowitz and Michael Levin at the University of Pennsylvania. Application source code is available on ", tags$a(href = "https://github.com/mglev1n/CAD-prs-variability", "GitHub.", target="_blank"), "For more information or to report issues, please contact ", tags$a(href = "mailto:Michael.Levin@pennmedicine.upenn.edu", "Michael.Levin@pennmedicine.upenn.edu.", target="_blank")),
